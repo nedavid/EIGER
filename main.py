@@ -1,6 +1,7 @@
 # main.py
 
 import os
+import sys
 import pandas as pd
 import prepare_data
 
@@ -61,6 +62,35 @@ class GeothermalPowerPlant:
         impact_k = []
 
         if self.plant_type == 'conventional':
+            # Check if input parameters are in valid range of Paulillo et al. (2021),
+            # https://doi.org/10.1016/j.cesys.2021.100054
+            if 'operational_CO2_emissions' in parameters.keys():
+                if parameters['operational_CO2_emissions'] < 0 or parameters['operational_CO2_emissions'] > 740:
+                    print ("Error: Operational CO2 emissions outside valid range [0-740]")
+                    sys.exit(1)
+            if 'operational_CH4_emissions' in parameters.keys():
+                if parameters['operational_CH4_emissions'] < 0 or parameters['operational_CH4_emissions'] > 740:
+                    print ("Error: Operational CH4 emissions outside valid range [0-740]")
+                    sys.exit(1)
+            if 'average_depth_of_wells'in parameters.keys():
+                if parameters['average_depth_of_wells'] < 660 or parameters['average_depth_of_wells'] > 4000:
+                    print ("Error: Average depth of wells outside valid range [660-4000]")
+                    sys.exit(1)
+            if 'producers_capacity' in parameters.keys():
+                if parameters['producers_capacity'] < 0 or parameters['producers_capacity'] > 20:
+                    print ("Error: Producers' capacity outside valid range [0-20]")
+                    sys.exit(1)
+            if 'initial_harmonic_decline_rate' in parameters.keys():
+                if (parameters['initial_harmonic_decline_rate'] < 0.01
+                        or parameters['initial_harmonic_decline_rate'] > 0.1):
+                    print ("Error: Initial harmonic decline rate outside valid range  [0.01-0.1]")
+                    sys.exit(1)
+            if 'success_rate_primary_wells' in parameters.keys():
+                if (parameters['success_rate_primary_wells'] < 0
+                        or parameters['success_rate_primary_wells'] > 100):
+                    print ("Error: Success rate, primary wells outside valid range  [0-100]")
+                    sys.exit(1)
+
             # Treat climage change category separately for conventional geothermal power plants.
             # 20%/15%/10%/5%
             if 'operational_CO2_emissions' and 'operational_CH4_emissions' in parameters.keys():
@@ -123,6 +153,26 @@ class GeothermalPowerPlant:
                     category_k.append(index)
 
         elif self.plant_type == 'enhanced':
+            # Check if input parameters are in valid range of Paulillo et al. (2021),
+            # https://doi.org/10.1016/j.cesys.2021.100054
+            if 'installed_capacity' in parameters.keys():
+                if parameters['installed_capacity'] < 0.4 or parameters['installed_capacity'] > 11:
+                    print ("Error: Installed capacity outside valid range [0.4-11]")
+                    sys.exit(1)
+            if 'average_depth_of_wells'in parameters.keys():
+                if parameters['average_depth_of_wells'] < 2500 or parameters['average_depth_of_wells'] > 6000:
+                    print ("Error: Average depth of wells outside valid range [2500-6000]")
+                    sys.exit(1)
+            if 'diesel_wells' in parameters.keys():
+                if parameters['diesel_wells'] < 3000 or parameters['diesel_wells'] > 14000:
+                    print ("Error: Diesel consumption outside valid range [3000-14000]")
+                    sys.exit(1)
+            if 'success_rate_primary_wells' in parameters.keys():
+                if (parameters['success_rate_primary_wells'] < 0
+                        or parameters['success_rate_primary_wells'] > 100):
+                    print ("Error: Success rate, primary wells outside valid range  [0-100]")
+                    sys.exit(1)
+
             # 20%
             if threshold == 0.2 and 'installed_capacity' in parameters.keys():
                 for index, chi in self.chi_20.iterrows():
@@ -190,6 +240,20 @@ class GeothermalPowerPlant:
         return category_k, impact_k
 
     def operational_ghg_emissions(self):
+        # Check input parameters
+        if self.condenser_temperature < 273.15:
+            print("Error: Temperature in the condenser must be above 0°C")
+            sys.exit(1)
+        if self.vapor_fraction < 0 or self.vapor_fraction > 1:
+            print("Error: Fraction of steam of geofluid has to be between 0 and 1")
+            sys.exit(1)
+        if self.f_co2 < 0 or self.f_co2 > 1:
+            print("Error: Fraction of CO2 in geofluid has to be between 0 and 1")
+            sys.exit(1)
+        if self.f_ch4 < 0 or self.f_ch4 > 1:
+            print("Error: Fraction of CH4 in geofluid has to be between 0 and 1")
+            sys.exit(1)
+
         # Using Henry's law to compute how much greenhouse gases are released (i.e. in vapor phase in condenser)
         massflux = self.massflux * self.vapor_fraction
         h_cp_s_co2 = 0.034 # mol l-1 bar-1

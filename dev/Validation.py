@@ -20,9 +20,7 @@ if __name__ == "__main__":
 
     impact_cc_conv = []
     for study, Eco2 in lit_CO2_emi.items():
-        parameters_conv = {}
-        parameters_conv['operational_CO2_emissions'] = Eco2
-        parameters_conv['operational_CH4_emissions'] = lit_CH4_emi[study]
+        parameters_conv = {'operational_CO2_emissions': Eco2, 'operational_CH4_emissions': lit_CH4_emi[study]}
 
         category_k, impact_k = plant_conv.simple_impact_model(parameters_conv)
         impact_cc_conv.append(impact_k)
@@ -57,11 +55,8 @@ if __name__ == "__main__":
     impact_cc_egs_20 = []
     impact_cc_egs_5 = []
     for study, cap in lit_capacity.items():
-        parameters_egs = {}
-        parameters_egs['installed_capacity'] = cap
-        parameters_egs['average_depth_of_wells'] = lit_depth[study]
-        parameters_egs['diesel_wells'] = lit_diesel[study]
-        parameters_egs['success_rate_primary_wells'] = lit_success_rate[study]
+        parameters_egs = {'installed_capacity': cap, 'average_depth_of_wells': lit_depth[study],
+                          'diesel_wells': lit_diesel[study], 'success_rate_primary_wells': lit_success_rate[study]}
 
         category_k_20, impact_k_20 = plant_egs.simple_impact_model(parameters_egs, 0.2)
         category_k_5, impact_k_5 = plant_egs.simple_impact_model(parameters_egs, 0.05)
