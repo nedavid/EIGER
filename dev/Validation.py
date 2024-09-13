@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     # Enhanced geothermal power plant - validation literature values
     lit_egs_df = pd.read_json('data/lit_egs.json')
-    lit_diesel = lit_egs_df['Diesel consumption (GJ/m)'].to_dict()
+    lit_diesel = lit_egs_df['Diesel consumption (MJ/m)'].to_dict()
     lit_capacity = lit_egs_df['Installed capacity (MW)'].to_dict()
     lit_depth = lit_egs_df['Depth of wells [m]'].to_dict()
     lit_success_rate = lit_egs_df['Success rate [%]'].to_dict()

@@ -62,19 +62,19 @@ class GeothermalPowerPlant:
                             'producers_capacity': [0, 20, "Producers' capacity"],
                             'initial_harmonic_decline_rate': [0.01, 0.1, "Initial harmonic decline rate"],
                             'success_rate_primary_wells': [0, 100, "Success rate, primary wells"],
-                            'condenser_temperature': [273.15, float('inf'), "Condenser temperature"],  # Above 0°C
+                            'condenser_temperature': [273.15, 373.15, "Condenser temperature"],
                             'vapor_fraction': [0, 1, "Vapor fraction of geofluid"],
                             'f_co2': [0, 1, "Fraction of CO2 in geofluid"],
                             'f_ch4': [0, 1, "Fraction of CH4 in geofluid"]
                             }
         if self.plant_type == 'enhanced':
             valid_ranges = {'average_depth_of_wells': [2500, 6000, "Average depth of wells"],
-                            'installed_capacity': [0.4, 11, "Installed capacity"],
-                            'diesel_wells': [3000, 14000, "Diesel consumption"],
+                            'installed_capacity': [0.4, 11.1, "Installed capacity"],
+                            'diesel_wells': [2600, 14200, "Diesel consumption"],
                             'success_rate_primary_wells': [0, 100, "Success rate, primary wells"]
                             }
         if key in valid_ranges.keys() and (value < valid_ranges[key][0] or value > valid_ranges[key][1]):
-            print("Error: "+valid_ranges[key][2]+" outside valid range ["
+            print("Error: "+valid_ranges[key][2]+" of "+str(value)+" outside valid range ["
                   +str(valid_ranges[key][0])+"-"+str(valid_ranges[key][1])+"]")
             sys.exit(1)
 
@@ -144,8 +144,8 @@ class GeothermalPowerPlant:
                                    beta.iloc[0]
                                    + parameters['initial_harmonic_decline_rate']
                                    * parameters['success_rate_primary_wells'] * beta.iloc[1]
-                                   + parameters['success_rate_primary_wells'] * beta.iloc[2]
-                                   + parameters['average_depth_of_wells'] * beta.iloc[3]
+                                   + parameters['average_depth_of_wells'] * beta.iloc[2]
+                                   + parameters['success_rate_primary_wells'] * beta.iloc[3]
                                   ) / (parameters['success_rate_primary_wells'] * parameters['producers_capacity'])
                                   + parameters['average_depth_of_wells'] * beta.iloc[4]
                                   + beta.iloc[5])
@@ -249,7 +249,7 @@ class GeothermalPowerPlant:
 
         f_direct_co2 = 1-h_cp_s_co2*pressure_co2*(1-self.f_co2)/density_water /(self.f_co2/mw_co2)
 
-        print("fraction of CO2 in gas phase in condenser",f_direct_co2)
+        print("Fraction of CO2 in gas phase in condenser",f_direct_co2)
 
         operational_co2_emissions = massflux*3600/self.power * self.f_co2 * f_direct_co2
 

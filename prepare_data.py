@@ -52,9 +52,10 @@ class Preparation:
         lit_conv_df['Operational CH4 emissions [g/kWh]'] = pd.to_numeric(
             lit_conv_df['Operational CH4 emissions [g/kWh]'], errors='coerce'
         ).fillna(0)
-        lit_egs_df['Diesel consumption (GJ/m)'] = pd.to_numeric(
+        lit_egs_df['Diesel consumption (MJ/m)'] = 1000*pd.to_numeric(
             lit_egs_df['Diesel consumption (GJ/m)'], errors='coerce'
         )
+        lit_egs_df.drop(columns=['Diesel consumption (GJ/m)'], inplace=True)
         lit_egs_df['Installed capacity (MW)'] = pd.to_numeric(
             lit_egs_df['Installed capacity (MW)'], errors='coerce'
         )
