@@ -236,3 +236,69 @@ if __name__ == "__main__":
     # Save the plot
     #plt.show()
     plt.savefig('dev/Fig4.png')
+
+    # Default parameter values for Douziech et al. (2012), https://doi.org/10.1021/acs.est.0c06751
+    parameters_egs_heat =  {'power_prod_pump': 500,  # kW
+                            'power_inj_pump': 0,  # kW
+                            'thermal_power_output': 22.5,  # MW
+                            'number_prod_wells': 1,
+                            'number_inj_wells': 1,
+                            'length_well': 2888, # m
+                            'share_coal': 0.04,
+                            'share_oil': 0.01,
+                            'share_nuclear': 0.76,
+                            'share_NG': 0.05,
+                            'share_wind': 0.02,
+                            'share_solar': 0.,
+                            'share_biomass': 0.01,
+                            'share_hydro': 0.11}
+
+    plant_egs_heat = GeothermalPowerPlant('egs_heat')
+    category_k, impact_k = plant_egs_heat.simple_impact_model(parameters_egs_heat)
+
+    category_plot = ['acidification', 'climate change', 'energy resources: non-renewable', 'ecotoxicity: freshwater',
+                     'human toxicity: carcinogenic', 'human toxicity: non-carcinogenic',
+                     'material resources: metals/minerals']
+
+# Create a figure with 7 subplots (2x4 grid)
+    fig, axes = plt.subplots(2, 4, figsize=(16, 16))
+
+    # Flatten the axes array for easy iteration
+    axes = axes.flatten()
+    # Remove not needed subplot
+    fig.delaxes(axes[7])
+
+    # Set y-lables and y-limits
+    ylabels = ['mol H+-Eq/kWh', 'kg CO2-Eq/kWh', 'MJ/kWh','CTU/kWh',
+               'CTUh/kWh', 'CTUh/kWh', 'kg Sb-Eq/kWh']
+    y_limits = [(0, 0.0025), (0, 0.3), (0, 5), (0, 1.2),
+                (0, 2E-9), (0, 4E-8),  (0, 2E-6)]
+
+    # Loop over each category and create a subplot
+    for i, category in enumerate(category_plot):
+        # Find the indices in each category list
+        idx = category_k.index(category)
+        # Plotting the points for each impact list
+        axes[i].bar(1, impact_k[idx], color='red')
+
+        # Set the x-ticks to correspond to the labels
+        axes[i].set_xticks([1])
+        axes[i].set_xticklabels(['simple model'])
+
+        # Set the title of the subplot to the category name
+        axes[i].set_title(category, pad=12)
+
+        # Set the y-labels
+        axes[i].set_ylabel(ylabels[i])
+
+        # Set the y-limits for each subplot individually
+        axes[i].set_ylim(y_limits[i])
+
+        # Adjust the layout slightly for better appearance
+        plt.subplots_adjust(hspace=0.4, wspace=0.4)
+
+    fig.suptitle('Representative energy generating installation')
+
+    # Save the plot
+    # plt.show()
+    plt.savefig('dev/Fig2_Douziech.png')
