@@ -302,3 +302,66 @@ if __name__ == "__main__":
     # Save the plot
     # plt.show()
     plt.savefig('dev/Fig2_Douziech.png')
+
+    # Enhanced geothermal heat plant
+    parameters_egs_heat_Alsace = {'power_prod_pump': 400,  # kW
+                                  'power_inj_pump': 0,  # kW
+                                  'thermal_power_output': 25,  # MW
+                                  'number_prod_wells': 1,
+                                  'number_inj_wells': 1,
+                                  'length_well': 2888,  # m
+                                  'share_coal': 0.036,
+                                  'share_oil': 0,
+                                  'share_nuclear': 0.503,
+                                  'share_NG': 0,
+                                  'share_wind': 0,
+                                  'share_solar': 0.006,
+                                  'share_biomass': 0,
+                                  'share_hydro': 0.45}
+    parameters_egs_heat_France = {'power_prod_pump': 400,  # kW
+                                  'power_inj_pump': 0,  # kW
+                                  'thermal_power_output': 25,  # MW
+                                  'number_prod_wells': 1,
+                                  'number_inj_wells': 1,
+                                  'length_well': 2888,  # m
+                                  'share_coal': 0.04,
+                                  'share_oil': 0.01,
+                                  'share_nuclear': 0.76,
+                                  'share_NG': 0.05,
+                                  'share_wind': 0.02,
+                                  'share_solar': 0,
+                                  'share_biomass': 0.01,
+                                  'share_hydro': 0.11}
+
+    category_k_A, impact_k_A = plant_egs_heat.simple_impact_model(parameters_egs_heat_Alsace)
+    category_k_F, impact_k_F = plant_egs_heat.simple_impact_model(parameters_egs_heat_France)
+
+    fig, ax = plt.subplots(figsize=(16, 6))
+
+    idx = category_k_A.index('climate change')
+    ax.scatter(impact_k_A[idx]*1000,1, color='yellow', label='Alsace', s=200)
+    idx = category_k_F.index('climate change')
+    ax.scatter(impact_k_F[idx]*1000,1, color='blue', label='France', s=200)
+
+    # Set the y-labels
+    ax.set_yticks([1])
+    ax.set_yticklabels(['Pratiwi et al 2018'], fontsize=30)
+
+    # Set the x-limits
+    ax.set_xlim(3.8, 7.3)
+
+    # Add legend
+    ax.legend(fontsize=30)
+
+    # Increase the font size of the x-axis labels and ticks
+    ax.tick_params(axis='x', labelsize=30)
+    ax.set_xlabel('g CO2-eq/kWh heat', fontsize=30)
+
+    # Hide the y-axis ticks
+    ax.yaxis.set_ticks_position('none')
+
+    # Adjust layout
+    plt.tight_layout()
+
+    # Save the plot
+    plt.savefig('dev/FigS8_Douziech.png')

@@ -352,45 +352,6 @@ def main():
     #print("Environmental impact categories", category_k)
     #print("Environmental impact of enhanced plant", impact_k)
 
-    # Enhanced geothermal heat plant
-    parameters_egs_heat_Alsace = {'power_prod_pump': 400,  # kW
-                                  'power_inj_pump': 0,  # kW
-                                  'thermal_power_output': 25,  # MW
-                                  'number_prod_wells': 1,
-                                  'number_inj_wells': 1,
-                                  'length_well': 2888, # m
-                                  'share_coal': 0.036,
-                                  'share_oil': 0,
-                                  'share_nuclear': 0.503,
-                                  'share_NG': 0,
-                                  'share_wind': 0,
-                                  'share_solar': 0.006,
-                                  'share_biomass': 0,
-                                  'share_hydro': 0.45}
-    parameters_egs_heat_France = {'power_prod_pump': 400,  # kW
-                                  'power_inj_pump': 0,  # kW
-                                  'thermal_power_output': 25,  # MW
-                                  'number_prod_wells': 1,
-                                  'number_inj_wells': 1,
-                                  'length_well': 2888, # m
-                                  'share_coal': 0.04,
-                                  'share_oil': 0.01,
-                                  'share_nuclear': 0.76,
-                                  'share_NG': 0.05,
-                                  'share_wind': 0.02,
-                                  'share_solar': 0,
-                                  'share_biomass': 0.01,
-                                  'share_hydro': 0.11}
-
-    plant_egs_heat = GeothermalPowerPlant('egs_heat')
-
-    category_k, impact_k = plant_egs_heat.simple_impact_model(parameters_egs_heat_Alsace)
-    print("Environmental impact categories", category_k)
-    print("Environmental impact of enhanced plant", impact_k)
-    category_k, impact_k = plant_egs_heat.simple_impact_model(parameters_egs_heat_France)
-    print("Environmental impact categories", category_k)
-    print("Environmental impact of enhanced plant", impact_k)
-
     plant_conv = GeothermalPowerPlant('conventional',massflux=100.0, power=70000.0,
                                       condenser_temperature=303.25, condenser_pressure=0.1,
                                       vapor_fraction=0.3, f_co2=0.02)
