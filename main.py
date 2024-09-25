@@ -3,14 +3,16 @@
 import os
 import sys
 import pandas as pd
-import prepare_data
+import prepare_data_general
 
 class GeothermalPowerPlant:
 
-    def __init__(self, plant_type, massflux=0.0, power=0.0, condenser_temperature=0.0, condenser_pressure=0.0,
-                 vapor_fraction=0.0, f_co2=0.0, f_ch4=0.0):
+    def __init__(self, plant_type, ncategories, nparameters, massflux=0.0, power=0.0, condenser_temperature=0.0,
+                 condenser_pressure=0.0, vapor_fraction=0.0, f_co2=0.0, f_ch4=0.0):
         """Initialize plant_type."""
-        self.plant_type = plant_type # conventional or enhanced
+        self.plant_type = plant_type # conventional, enhanced or egs_heat_general
+        self.ncategories = ncategories
+        self.nparameters = nparameters
         self.massflux = massflux # kg s-1
         self.power = power # kW
         self.condenser_temperature = condenser_temperature # K
@@ -18,278 +20,87 @@ class GeothermalPowerPlant:
         self.vapor_fraction = vapor_fraction # fraction of water vapor in conventional power plant
         self.f_co2 = f_co2 # fraction of CO2 in geofluid
         self.f_ch4 = f_ch4 # fraction of CH4 in geofluid
-        (self.alpha, self.beta_20, self.beta_10, self.beta_5, self.chi_20, self.chi_15, self.chi_10,
-         self.chi_5, self.delta_15, self.delta_10, self.delta_5, self.alpha_egs_heat, self.beta_egs_heat,
-         self.gamma_egs_heat) = self.read_coefficients()
+        (self.alpha, self.beta, self.gamma, self.parameter_x, self.parameter_y, self.parameter_z,
+         self.parameter_u, self.parameter_v, self.parameter_w, self.valid_ranges) = self.read_model()
+
+    def read_model(self):
+        # Check first if coefficient data exist and if not, prepare them.
+        while True:
+            filelist = ['data/alpha_'+self.plant_type+'.json', 'data/beta_'+self.plant_type+'.json',
+                        'data/gamma_'+self.plant_type+'.json', 'data/x_'+self.plant_type+'.json',
+                        'data/y_'+self.plant_type+'.json', 'data/z_'+self.plant_type+'.json',
+                        'data/u_'+self.plant_type+'.json', 'data/v_'+self.plant_type+'.json',
+                        'data/w_'+self.plant_type+'.json','data/valid_ranges_' + self.plant_type + '.json']
+            if all([os.path.isfile(f) for f in filelist]):
+                break
+            else:
+                data = prepare_data_general.Preparation('data/'+self.plant_type+'.xlsx',self.plant_type,
+                                                        self.ncategories,self.nparameters)
+
+                # Read the tables
+                data.read_data()
+
+                # Save all DataFrames to JSON files
+                data.write_output("data/")
+                print(f"Coefficient data, model parameter and valid ranges prepared and saved to data/.")
+
+        alpha_df = pd.read_json('data/alpha_'+self.plant_type+'.json')
+        beta_df = pd.read_json('data/beta_'+self.plant_type+'.json')
+        gamma_df = pd.read_json('data/gamma_'+self.plant_type+'.json')
+        x_df = pd.read_json('data/x_'+self.plant_type+'.json')
+        y_df = pd.read_json('data/y_'+self.plant_type+'.json')
+        z_df = pd.read_json('data/z_'+self.plant_type+'.json')
+        u_df = pd.read_json('data/u_'+self.plant_type+'.json')
+        v_df = pd.read_json('data/v_'+self.plant_type+'.json')
+        w_df = pd.read_json('data/w_'+self.plant_type+'.json')
+        valid_ranges_df = pd.read_json('data/valid_ranges_'+self.plant_type+'.json')
+        # Convert DataFrame to dictionary
+        valid_ranges = valid_ranges_df.set_index(0).T.to_dict(orient='list')
+        return (alpha_df, beta_df, gamma_df, x_df, y_df, z_df, u_df, v_df, w_df, valid_ranges)
 
     @staticmethod
-    def read_coefficients():
-        # Check first if coefficient and literature data exist and if not, prepare them.
-        while True:
-            filelist = ['data/alpha.json','data/beta_20.json','data/beta_10.json','data/beta_5.json','data/chi_20.json',
-                        'data/chi_15.json','data/chi_10.json','data/chi_5.json','data/delta_15.json',
-                        'data/delta_10.json','data/delta_5.json','data/lit_conv.json','data/lit_egs.json']
-            if all([os.path.isfile(f) for f in filelist]):
-                break
-            else:
-                data = prepare_data.Preparation("data/simplified_SI.docx")
-
-                # Read the tables
-                data.read_data()
-
-                # Save all DataFrames to JSON files
-                data.write_output("data/")
-                print(f"Coefficient and literature data prepared and saved to data/.")
-        while True:
-            filelist = ['data/alpha_egs_heat.json','data/beta_egs_heat.json','data/gamma_egs_heat.json']
-            if all([os.path.isfile(f) for f in filelist]):
-                break
-            else:
-                data = prepare_data.Preparation("data/Coefficients_Douziech_et_al_2021.xlsx")
-
-                # Read the tables
-                data.read_data()
-
-                # Save all DataFrames to JSON files
-                data.write_output("data/")
-                print(f"Coefficient and literature data prepared and saved to data/.")
-
-        alpha_df = pd.read_json('data/alpha.json')
-        beta_20_df = pd.read_json('data/beta_20.json')
-        beta_10_df = pd.read_json('data/beta_10.json')
-        beta_5_df = pd.read_json('data/beta_5.json')
-        chi_20_df = pd.read_json('data/chi_20.json')
-        chi_15_df = pd.read_json('data/chi_15.json')
-        chi_10_df = pd.read_json('data/chi_10.json')
-        chi_5_df = pd.read_json('data/chi_5.json')
-        delta_15_df = pd.read_json('data/delta_15.json')
-        delta_10_df = pd.read_json('data/delta_10.json')
-        delta_5_df = pd.read_json('data/delta_5.json')
-        alpha_egs_heat_df = pd.read_json('data/alpha_egs_heat.json')
-        beta_egs_heat_df = pd.read_json('data/beta_egs_heat.json')
-        gamma_egs_heat_df = pd.read_json('data/gamma_egs_heat.json')
-        return (alpha_df, beta_20_df, beta_10_df,beta_5_df,chi_20_df,chi_15_df,chi_10_df,
-                chi_5_df,delta_15_df,delta_10_df, delta_5_df, alpha_egs_heat_df, beta_egs_heat_df, gamma_egs_heat_df)
+    def map_parameters(param_model, parameters):
+        # Define a helper function to map parameters
+        return param_model.map(lambda x: parameters[x] if isinstance(x, str) and x in parameters else x)
 
     def check_parameter(self,key,value):
-        if self.plant_type == 'conventional':
-            valid_ranges = {'operational_CO2_emissions': [0,740,"Operational CO2 emissions"],
-                            'operational_CH4_emissions': [0,740,"Operational CH4 emissions"],
-                            'average_depth_of_wells': [660, 4000, "Average depth of wells"],
-                            'producers_capacity': [0, 20, "Producers' capacity"],
-                            'initial_harmonic_decline_rate': [0.01, 0.1, "Initial harmonic decline rate"],
-                            'success_rate_primary_wells': [0, 100, "Success rate, primary wells"],
-                            'condenser_temperature': [273.15, 373.15, "Condenser temperature"],
-                            'vapor_fraction': [0, 1, "Vapor fraction of geofluid"],
-                            'f_co2': [0, 1, "Fraction of CO2 in geofluid"],
-                            'f_ch4': [0, 1, "Fraction of CH4 in geofluid"]
-                            }
-        if self.plant_type == 'enhanced':
-            valid_ranges = {'average_depth_of_wells': [2500, 6000, "Average depth of wells"],
-                            'installed_capacity': [0.4, 11.1, "Installed capacity"],
-                            'diesel_wells': [2600, 14200, "Diesel consumption"],
-                            'success_rate_primary_wells': [0, 100, "Success rate, primary wells"]
-                            }
-        if self.plant_type == 'egs_heat':
-            valid_ranges = {'power_prod_pump': [200, 1200, "Power production pump"],
-                            'power_inj_pump': [0, 500, "Power injection pump"],
-                            'thermal_power_output': [10, 40, "Thermal power output"],
-                            'number_prod_wells': [1, 2, "Number production wells"],
-                            'number_inj_wells': [1, 2, "Number injection wells"],
-                            'length_well': [1300, 5500, "Length_well"],
-                            'share_coal': [0, 1, "Share of coal"],
-                            'share_oil': [0, 1, "Share of oil"],
-                            'share_nuclear': [0, 1, "Share of nuclear"],
-                            'share_NG': [0, 1, "Share of natural gas"],
-                            'share_wind': [0, 1, "Share of wind"],
-                            'share_solar': [0, 1, "Share of solar"],
-                            'share_biomass': [0, 1, "Share of biomass"],
-                            'share_hydro': [0, 1, "Share of hydro"]
-                            }
-        if key in valid_ranges.keys() and (value < valid_ranges[key][0] or value > valid_ranges[key][1]):
-            print("Error: "+valid_ranges[key][2]+" of "+str(value)+" outside valid range ["
-                  +str(valid_ranges[key][0])+"-"+str(valid_ranges[key][1])+"]")
+        if key in self.valid_ranges.keys() and (value < self.valid_ranges[key][0] or value > self.valid_ranges[key][1]):
+            print("Error: "+self.valid_ranges[key][2]+" of "+str(value)+" outside valid range ["
+                  +str(self.valid_ranges[key][0])+"-"+str(self.valid_ranges[key][1])+"]")
             sys.exit(1)
 
-    def simple_impact_model(self, parameters, threshold=0.2):
-        # Note that coefficients like alpha_1 or beta_3 are referenced as alpha.iloc[0] or beta.iloc[2] i.e. the index
-        # is one number smaller than the coefficient in Paulillo et al. (2022) due to Python indexing.
-        # Separate models are used for reliability thresholds 20%/15%/10%/5%.
-        category_k = []
+    def simple_impact_model(self, parameters):
+        """Computation of environmental impact using a general equation that can be applied to several models
+        and allows for easier extension to new models which become available. The general equation is of the form:
+        Sum_over_i[(alpha_i * x_i * y_i * z_i**beta_i * 10**(gamma_i * w_i)) / (u_i * v_i) ]
+        All environmental impact models need to be converted to this form to be used with this function."""
+        for key, value in parameters.items():
+            self.check_parameter(key, value)
+
+        # Map parameter values to model parameters
+        parameter_x = self.map_parameters(self.parameter_x, parameters)
+        parameter_y = self.map_parameters(self.parameter_y, parameters)
+        parameter_z = self.map_parameters(self.parameter_z, parameters)
+        parameter_u = self.map_parameters(self.parameter_u, parameters)
+        parameter_v = self.map_parameters(self.parameter_v, parameters)
+        parameter_w = self.map_parameters(self.parameter_w, parameters)
+
         impact_k = []
-
-        if self.plant_type == 'conventional':
-            # Check if input parameters are in valid range of Paulillo et al. (2021),
-            # https://doi.org/10.1016/j.cesys.2021.100054
-            for key, value in parameters.items():
-                self.check_parameter(key,value)
-
-            # Treat climage change category separately for conventional geothermal power plants.
-            # 20%/15%/10%/5%
-            if 'operational_CO2_emissions' and 'operational_CH4_emissions' in parameters.keys():
-                impact_cat = (parameters['operational_CO2_emissions'] * self.alpha.loc['climate change'].iloc[0]
-                             + parameters['operational_CH4_emissions'] * self.alpha.loc['climate change'].iloc[1]
-                             + self.alpha.loc['climate change'].iloc[2])
-                impact_k.append(impact_cat)
-                category_k.append('climate change')
-
-            # Treat all other environmental impact categories.
-            # 20%
-            if threshold == 0.2 and 'average_depth_of_wells' and 'producers_capacity' in parameters.keys():
-                for index, beta in self.beta_20.iterrows():
-                    impact_cat = ((parameters['average_depth_of_wells'] * beta.iloc[0] + beta.iloc[1])
-                                  / parameters['producers_capacity']
-                                  + parameters['average_depth_of_wells'] * beta.iloc[2] + beta.iloc[3])
-                    impact_k.append(impact_cat)
-                    category_k.append(index)
-            # 15%
-            elif threshold == 0.15 and 'average_depth_of_wells' and 'producers_capacity' in parameters.keys():
-                for index, beta in self.beta_20.iterrows():
-                    impact_cat = ((parameters['average_depth_of_wells'] * beta.iloc[0]+ beta.iloc[1])
-                                  / parameters['producers_capacity']
-                                  + parameters['average_depth_of_wells'] * beta.iloc[2] + beta.iloc[3])
-                    impact_k.append(impact_cat)
-                    category_k.append(index)
-
-            # 10%
-            elif (threshold == 0.1
-                  and 'average_depth_of_wells' and 'producers_capacity'
-                  and 'initial_harmonic_decline_rate' in parameters.keys()) :
-                for index, beta in self.beta_10.iterrows():
-                    impact_cat = ((parameters['initial_harmonic_decline_rate'] * parameters['average_depth_of_wells'] *
-                                   beta.iloc[0]
-                                   + parameters['initial_harmonic_decline_rate'] * beta.iloc[1]
-                                   + parameters['average_depth_of_wells'] * beta.iloc[2]
-                                   + beta.iloc[3]
-                                  ) / parameters['producers_capacity']
-                                  + parameters['average_depth_of_wells'] * beta.iloc[4]
-                                  + beta.iloc[5])
-                    impact_k.append(impact_cat)
-                    category_k.append(index)
-
-            # 5%
-            elif (threshold == 0.05
-                  and 'average_depth_of_wells' and 'producers_capacity' and 'success_rate_primary_wells'
-                  and 'initial_harmonic_decline_rate' in parameters.keys()):
-                for index, beta in self.beta_5.iterrows():
-                    impact_cat = ((parameters['success_rate_primary_wells'] *
-                                   parameters['initial_harmonic_decline_rate'] * parameters['average_depth_of_wells'] *
-                                   beta.iloc[0]
-                                   + parameters['initial_harmonic_decline_rate']
-                                   * parameters['success_rate_primary_wells'] * beta.iloc[1]
-                                   + parameters['average_depth_of_wells'] * beta.iloc[2]
-                                   + parameters['success_rate_primary_wells'] * beta.iloc[3]
-                                  ) / (parameters['success_rate_primary_wells'] * parameters['producers_capacity'])
-                                  + parameters['average_depth_of_wells'] * beta.iloc[4]
-                                  + beta.iloc[5])
-                    impact_k.append(impact_cat)
-                    category_k.append(index)
-
-        elif self.plant_type == 'enhanced':
-            # Check if input parameters are in valid range of Paulillo et al. (2021),
-            # https://doi.org/10.1016/j.cesys.2021.100054
-            for key, value in parameters.items():
-                self.check_parameter(key,value)
-
-            # 20%
-            if threshold == 0.2 and 'installed_capacity' in parameters.keys():
-                for index, chi in self.chi_20.iterrows():
-                    impact_cat = chi.iloc[0] / parameters['installed_capacity'] + chi.iloc[1]
-                    impact_k.append(impact_cat)
-                    category_k.append(index)
-
-            # 15%
-            elif threshold == 0.15 and 'installed_capacity' in parameters.keys():
-                # Group 1
-                for index, chi in self.chi_15.iterrows():
-                    impact_cat = chi.iloc[0] / parameters['installed_capacity'] + chi.iloc[1]
-                    impact_k.append(impact_cat)
-                    category_k.append(index)
-                # Group 2
-                if 'diesel_wells' in parameters.keys():
-                    for index, delta in self.delta_15.iterrows():
-                        impact_cat = (parameters['diesel_wells'] * delta.iloc[0] + delta.iloc[1]
-                                      / parameters['installed_capacity'] + delta.iloc[2])
-                        impact_k.append(impact_cat)
-                        category_k.append(index)
-
-            # 10%
-            elif threshold == 0.1 and 'installed_capacity' in parameters.keys():
-                # Group 1
-                for index, chi in self.chi_10.iterrows():
-                    impact_cat = chi.iloc[0] / parameters['installed_capacity'] + chi.iloc[1]
-                    impact_k.append(impact_cat)
-                    category_k.append(index)
-                # Group 2
-                if 'diesel_wells' in parameters.keys():
-                    for index, delta in self.delta_10.iterrows():
-                        impact_cat = (parameters['diesel_wells'] * delta.iloc[0] + delta.iloc[1]
-                                      / parameters['installed_capacity'] + delta.iloc[2])
-                        impact_k.append(impact_cat)
-                        category_k.append(index)
-
-            # 5%
-            elif (threshold == 0.05 and 'success_rate_primary_wells' and 'average_depth_of_wells'
-                  and 'installed_capacity' in parameters.keys()):
-                # Group 1
-                for index, chi in self.chi_5.iterrows():
-                    impact_cat = ((parameters['success_rate_primary_wells'] * parameters['average_depth_of_wells']
-                                   * chi.iloc[0] + parameters['success_rate_primary_wells'] * chi.iloc[1]
-                                   + parameters['average_depth_of_wells'] * chi.iloc[2])
-                                  / (parameters['success_rate_primary_wells'] * parameters['installed_capacity'])
-                                  + chi.iloc[3])
-                    impact_k.append(impact_cat)
-                    category_k.append(index)
-                # Group 2
-                if 'diesel_wells' in parameters.keys():
-                    for index, delta in self.delta_5.iterrows():
-                        impact_cat = ((parameters['diesel_wells'] * parameters['average_depth_of_wells']
-                                       * parameters['success_rate_primary_wells'] * delta.iloc[0]
-                                       + parameters['diesel_wells'] * parameters['average_depth_of_wells']
-                                       * delta.iloc[1]
-                                       + parameters['success_rate_primary_wells'] * parameters['average_depth_of_wells']
-                                       * delta.iloc[2] + parameters['success_rate_primary_wells'] * delta.iloc[3]
-                                       + parameters['average_depth_of_wells'] * delta.iloc[4])
-                                      / (parameters['success_rate_primary_wells'] * parameters['installed_capacity'])
-                                      + delta.iloc[5])
-                        impact_k.append(impact_cat)
-                        category_k.append(index)
-
-        elif self.plant_type == 'egs_heat':
-            # Check if input parameters are in valid range of Douziech et al. (2021),
-            # https://doi.org/10.1021/acs.est.0c06751
-            for key, value in parameters.items():
-                self.check_parameter(key,value)
-
-            if ('share_coal' and 'share_NG' and 'share_nuclear' and 'share_oil' and 'share_hydro' and 'share_wind'
-                and 'share_biomass' and 'share_solar' and 'number_inj_wells' and 'number_prod_wells'
-                and 'length_well' and 'power_prod_pump' and 'power_inj_pump'
-                and 'thermal_power_output') in parameters.keys():
-                for (index, alpha), (index_b, beta), (index_c, gamma) in zip(self.alpha_egs_heat.iterrows(),
-                               self.beta_egs_heat.iterrows(),
-                               self.gamma_egs_heat.iterrows()):
-                    impact_cat = (((parameters['number_inj_wells'] * parameters['power_inj_pump']
-                                   + parameters['number_prod_wells'] * parameters['power_prod_pump'])
-                                  * (alpha.iloc[0] * parameters['share_biomass']
-                                     + alpha.iloc[1] * parameters['share_coal']
-                                     + alpha.iloc[2] * parameters['share_hydro']
-                                     + alpha.iloc[3] * parameters['share_NG']
-                                     + alpha.iloc[4] * parameters['share_nuclear']
-                                     + alpha.iloc[5] * parameters['share_oil']
-                                     + alpha.iloc[6] * parameters['share_solar']
-                                     + alpha.iloc[7] * parameters['share_wind'])
-                                  + (alpha.iloc[8] * parameters['number_inj_wells']
-                                     + alpha.iloc[9] * parameters['number_prod_wells'] * parameters['power_prod_pump']
-                                     + (parameters['number_inj_wells'] + parameters['number_prod_wells'])
-                                     * (alpha.iloc[10] * 10**(gamma.iloc[0] * parameters['length_well'])
-                                        + alpha.iloc[11] * parameters['length_well']
-                                        + alpha.iloc[12] * parameters['length_well']**beta.iloc[0]
-                                        + alpha.iloc[13] * parameters['length_well']**beta.iloc[1]
-                                        + alpha.iloc[14] * parameters['length_well']**beta.iloc[2])
-                                     +alpha.iloc[15]))
-                                  / parameters['thermal_power_output'])
-                    impact_k.append(impact_cat)
-                    category_k.append(index)
+        category_k = []
+        # Compute environmental impact per category
+        for (index, alpha_g), (index_b, beta), (index_c, gamma) in zip(self.alpha.iterrows(),
+                                                                       self.beta.iterrows(),
+                                                                       self.gamma.iterrows()):
+            impact_cat = 0
+            for i, alpha in enumerate(alpha_g):
+                impact_cat = (impact_cat
+                              + (alpha * parameter_x.loc[index].iloc[i]
+                                 * parameter_y.loc[index].iloc[i]
+                                 * parameter_z.loc[index].iloc[i] ** beta.iloc[i]
+                                 * 10 ** (gamma.iloc[i] * parameter_w.loc[index].iloc[i]))
+                              / (parameter_u.loc[index].iloc[i] * parameter_v.loc[index].iloc[i]))
+            impact_k.append(impact_cat)
+            category_k.append(index)
 
         return category_k, impact_k
 
@@ -325,38 +136,27 @@ class GeothermalPowerPlant:
         return operational_co2_emissions
 
 def main():
-    # Conventional geothermal power plant - median literature values
-    parameters_conv = {'operational_CO2_emissions': 77,  # gCO2/kWh
-                       'operational_CH4_emissions': 0.0,  # gCH4/kWh
-                       'producers_capacity': 5.9,  # MW/well
-                       'average_depth_of_wells': 2250,  # m/well
-                       'initial_harmonic_decline_rate': 0.05,
-                       'success_rate_primary_wells': 72.1} # %
+    # Default parameter values for Douziech et al. (2012), https://doi.org/10.1021/acs.est.0c06751
+    parameters_egs_heat =  {'power_prod_pump': 500,  # kW
+                            'power_inj_pump': 0,  # kW
+                            'thermal_power_output': 22.5,  # MW
+                            'number_prod_wells': 1,
+                            'number_inj_wells': 1,
+                            'length_well': 2888, # m
+                            'share_coal': 0.04,
+                            'share_oil': 0.01,
+                            'share_nuclear': 0.76,
+                            'share_NG': 0.05,
+                            'share_wind': 0.02,
+                            'share_solar': 0.,
+                            'share_biomass': 0.01,
+                            'share_hydro': 0.11}
 
-    plant_conv = GeothermalPowerPlant('conventional')
+    plant_egs_heat = GeothermalPowerPlant('egs_heat',7,14)
+    category_k, impact_k = plant_egs_heat.simple_impact_model(parameters_egs_heat)
 
-
-    category_k, impact_k = plant_conv.simple_impact_model(parameters_conv,0.05)
-    #print("Environmental impact categories", category_k)
-    #print("Environmental impact of conventional plant", impact_k)
-
-    # Enhanced geothermal power plant - median literature values
-    parameters_egs = {'installed_capacity': 5.7,  # MW
-                      'average_depth_of_wells': 4250,  # m/well
-                      'diesel_wells': 8500,  # MJ/m
-                      'success_rate_primary_wells': 72.1} # %
-
-    plant_egs = GeothermalPowerPlant('enhanced')
-
-    category_k, impact_k = plant_egs.simple_impact_model(parameters_egs,0.05)
     #print("Environmental impact categories", category_k)
     #print("Environmental impact of enhanced plant", impact_k)
-
-    plant_conv = GeothermalPowerPlant('conventional',massflux=100.0, power=70000.0,
-                                      condenser_temperature=303.25, condenser_pressure=0.1,
-                                      vapor_fraction=0.3, f_co2=0.02)
-    operational_co2_emissions = plant_conv.operational_ghg_emissions()
-    print("Operational CO2 emissions [kgCO2eq/kWh]:",operational_co2_emissions)
 
 if __name__ == "__main__":
     main()
