@@ -1,4 +1,4 @@
-# prepare_data.py
+# prepare_data_egs_heat.py
 
 import os
 import pandas as pd
@@ -16,7 +16,6 @@ class Preparation:
             'beta_egs_heat.json': pd.read_excel(self.doc,sheet_name='beta',nrows=8,index_col=0),
             'gamma_egs_heat.json': pd.read_excel(self.doc,sheet_name='gamma',nrows=8,index_col=0),
         }
-        print(self.dataframes)
 
     def write_output(self, output_dir="data/"):
         # Save all DataFrames to JSON files
