@@ -8,7 +8,7 @@ import os
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(parent_dir)
 
-from main import GeothermalPowerPlant
+from main import GeothermalPlant
 
 if __name__ == "__main__":
     # Conventional geothermal power plant - validation literature values
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     lit_CO2_emi = lit_conv_df['Operational CO2 emissions [g/kWh]'].to_dict()
     lit_CH4_emi = lit_conv_df['Operational CH4 emissions [g/kWh]'].to_dict()
 
-    plant_conv = GeothermalPowerPlant('conventional_power_20',16,10)
+    plant_conv = GeothermalPlant('conventional_power_20',16,10)
 
     impact_cc_conv = []
     for study, Eco2 in lit_CO2_emi.items():
@@ -62,9 +62,9 @@ if __name__ == "__main__":
     for study, cap in lit_capacity.items():
         parameters_egs = {'installed_capacity': cap, 'average_depth_of_wells': lit_depth[study],
                           'diesel_wells': lit_diesel[study], 'success_rate_primary_wells': lit_success_rate[study]}
-        plant_egs = GeothermalPowerPlant('egs_power_20', 16, 10)
+        plant_egs = GeothermalPlant('egs_power_20', 16, 10)
         category_k_20, impact_k_20 = plant_egs.simple_impact_model(parameters_egs)
-        plant_egs = GeothermalPowerPlant('egs_power_5', 16, 10)
+        plant_egs = GeothermalPlant('egs_power_5', 16, 10)
         category_k_5, impact_k_5 = plant_egs.simple_impact_model(parameters_egs)
         ind_20 = category_k_20.index("climate change")
         ind_5 = category_k_5.index("climate change")
@@ -115,11 +115,11 @@ if __name__ == "__main__":
                        'success_rate_primary_wells': 100} # %
 
     category_k, impact_k_20 = plant_conv.simple_impact_model(parameters_hellisheidi)
-    plant_conv = GeothermalPowerPlant('conventional_power_15',16,10)
+    plant_conv = GeothermalPlant('conventional_power_15',16,10)
     category_k, impact_k_15 = plant_conv.simple_impact_model(parameters_hellisheidi)
-    plant_conv = GeothermalPowerPlant('conventional_power_10',16,10)
+    plant_conv = GeothermalPlant('conventional_power_10',16,10)
     category_k, impact_k_10 = plant_conv.simple_impact_model(parameters_hellisheidi)
-    plant_conv = GeothermalPowerPlant('conventional_power_5',16,10)
+    plant_conv = GeothermalPlant('conventional_power_5',16,10)
     category_k, impact_k_5 = plant_conv.simple_impact_model(parameters_hellisheidi)
 
     # Create a figure with 16 subplots (4x4 grid)
@@ -179,13 +179,13 @@ if __name__ == "__main__":
                       'diesel_wells': 7200,  # MJ/m
                       'success_rate_primary_wells': 100} # %
 
-    plant_egs = GeothermalPowerPlant('egs_power_20', 16, 10)
+    plant_egs = GeothermalPlant('egs_power_20', 16, 10)
     category_k_20, impact_k_20 = plant_egs.simple_impact_model(parameters_uddgp)
-    plant_egs = GeothermalPowerPlant('egs_power_15',16,10)
+    plant_egs = GeothermalPlant('egs_power_15',16,10)
     category_k_15, impact_k_15 = plant_egs.simple_impact_model(parameters_uddgp)
-    plant_egs = GeothermalPowerPlant('egs_power_10',16,10)
+    plant_egs = GeothermalPlant('egs_power_10',16,10)
     category_k_10, impact_k_10 = plant_egs.simple_impact_model(parameters_uddgp)
-    plant_egs = GeothermalPowerPlant('egs_power_5',16,10)
+    plant_egs = GeothermalPlant('egs_power_5',16,10)
     category_k_5, impact_k_5 = plant_egs.simple_impact_model(parameters_uddgp)
 
     # Create a figure with 16 subplots (4x4 grid)
@@ -250,13 +250,13 @@ if __name__ == "__main__":
     #plt.show()
     plt.savefig('dev/Fig4.png')
 
-    plant_egs = GeothermalPowerPlant('egs_power_20_no_expl_wells', 16, 10)
+    plant_egs = GeothermalPlant('egs_power_20_no_expl_wells', 16, 10)
     category_k_20, impact_k_20 = plant_egs.simple_impact_model(parameters_uddgp)
-    plant_egs = GeothermalPowerPlant('egs_power_15_no_expl_wells',16,10)
+    plant_egs = GeothermalPlant('egs_power_15_no_expl_wells',16,10)
     category_k_15, impact_k_15 = plant_egs.simple_impact_model(parameters_uddgp)
-    plant_egs = GeothermalPowerPlant('egs_power_10_no_expl_wells',16,10)
+    plant_egs = GeothermalPlant('egs_power_10_no_expl_wells',16,10)
     category_k_10, impact_k_10 = plant_egs.simple_impact_model(parameters_uddgp)
-    plant_egs = GeothermalPowerPlant('egs_power_5_no_expl_wells',16,10)
+    plant_egs = GeothermalPlant('egs_power_5_no_expl_wells',16,10)
     category_k_5, impact_k_5 = plant_egs.simple_impact_model(parameters_uddgp)
 
     # Create a figure with 16 subplots (4x4 grid)
@@ -319,7 +319,7 @@ if __name__ == "__main__":
                             'share_biomass': 0.01,
                             'share_hydro': 0.11}
 
-    plant_egs_heat = GeothermalPowerPlant('egs_heat',7,14)
+    plant_egs_heat = GeothermalPlant('egs_heat',7,14)
     category_k, impact_k = plant_egs_heat.simple_impact_model(parameters_egs_heat)
 
     category_plot = ['acidification', 'climate change', 'energy resources: non-renewable', 'ecotoxicity: freshwater',

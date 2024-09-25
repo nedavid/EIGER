@@ -5,7 +5,7 @@ import sys
 import pandas as pd
 import prepare_data_general
 
-class GeothermalPowerPlant:
+class GeothermalPlant:
 
     def __init__(self, plant_type, ncategories, nparameters, massflux=0.0, power=0.0, condenser_temperature=0.0,
                  condenser_pressure=0.0, vapor_fraction=0.0, f_co2=0.0, f_ch4=0.0):
@@ -152,7 +152,7 @@ def main():
                             'share_biomass': 0.01,
                             'share_hydro': 0.11}
 
-    plant_egs_heat = GeothermalPowerPlant('egs_heat',7,14)
+    plant_egs_heat = GeothermalPlant('egs_heat',7,14)
     category_k, impact_k = plant_egs_heat.simple_impact_model(parameters_egs_heat)
 
     #print("Environmental impact categories", category_k)
